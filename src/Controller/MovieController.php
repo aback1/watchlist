@@ -72,6 +72,8 @@ class MovieController extends AbstractController
             'imdbID' => $movie->getImdbID(),
             'Poster' => $movie->getPoster(),
             'Type' => $movie->getType(),
+             'Rating' => $movie->getRating(),
+             'Watched'=> $movie->getWatched()
 
             ];
 
@@ -85,14 +87,14 @@ class MovieController extends AbstractController
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
-        if (!isset($data['username']) || !isset($data['imbdID'])|| !isset($data['Title']))
+        if (!isset($data['username']) || !isset($data['imdbID'])|| !isset($data['Title']))
          {
              return new JsonResponse(["error => the title imdbID and username are needed to delete the entry from the watchList!"], 400);
          }
 
         $movie = $entityManager->getRepository(Movie::class)->findOneBy([
             'username' => $data['username'],
-            'imdbID' => $data['imbdID'],
+            'imdbID' => $data['imdbID'],
             'Title' => $data['Title']
         ]);
 
@@ -103,6 +105,69 @@ class MovieController extends AbstractController
         $entityManager->flush();
 
         return new JsonResponse(["status" => "Entry deleted successfully from the watchlist"], 200);
+    }
+
+    #[Route('/movies/rate', name: 'rate_movie', methods: ['PATCH'])]
+    public function rateMovie(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['username'], $data['imdbID'], $data['rating'])) {
+            return new JsonResponse(["error" => "Missing required fields"], 400);
+        }
+
+        $movie = $entityManager->getRepository(Movie::class)->findOneBy([
+            'username' => $data['username'],
+            'imdbID' => $data['imdbID']
+        ]);
+
+        if (!$movie) {
+            return new JsonResponse(["error" => "Movie not found in watchlist"], 404);
+        }
+
+        $movie->setRating((float)$data['rating']);
+
+        $errors = $validator->validate($movie);
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getMessage();
+            }
+            return new JsonResponse(["errors" => $errorMessages], 400);
+        }
+
+        $entityManager->flush();
+
+        return new JsonResponse(["status" => "Rating updated successfully"], 200);
+    }
+
+    #[Route('/movies/watched', name: 'mark_movie_watched', methods: ['PATCH'])]
+    public function markMovieWatched(
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['username'], $data['imdbID'])) {
+            return new JsonResponse(["error" => "Missing required fields"], 400);
+        }
+
+        $movie = $entityManager->getRepository(Movie::class)->findOneBy([
+            'username' => $data['username'],
+            'imdbID' => $data['imdbID']
+        ]);
+
+        if (!$movie) {
+            return new JsonResponse(["error" => "Movie not found in watchlist"], 404);
+        }
+
+        $movie->setWatched(true);
+        $entityManager->flush();
+
+        return new JsonResponse(["status" => "Movie marked as watched"], 200);
     }
 
 }

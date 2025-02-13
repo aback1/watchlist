@@ -7,17 +7,20 @@ use App\Repository\MovieRepository;
 use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\ORM\Mapping as ORM;
+use phpDocumentor\Reflection\Types\Boolean;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
+
 
 #[ORM\Entity(repositoryClass: MovieRepository::class)]
 #[ApiResource]
-#[ApiFilter(SearchFilter::class, properties: ["title" => 'exact'])]
+#[ApiFilter(SearchFilter::class, properties: ["Title" => 'exact'])]
 #[ORM\Table(name: 'movies', uniqueConstraints: [
-    new ORM\UniqueConstraint(name: "title_unique", columns: ["title"])
+    new ORM\UniqueConstraint(name: "title_unique", columns: ["Title"])
 ])]
 
 
-#[UniqueEntity(fields: ["title", "imdbID"], message: "You already have the selected item in your watchlist!")]
+#[UniqueEntity(fields: ["Title", "imdbID"], message: "You already have the selected item in your watchlist!")]
 
 class Movie
 {
@@ -42,11 +45,12 @@ class Movie
     #[ORM\Column(type: 'string', length: 7)]
     private string $Type = "";
 
-    #[ORM\Column(type: 'float', length: 5, nullable: true)]
-    private float $rating = 0;
+    #[ORM\Column(type: 'float' , nullable: true)]
+    #[Assert\Range(min: 0, max: 5, notInRangeMessage: 'Rating must be between {{ min }} and {{ max }}.')]
+    private ?float $Rating = 0;
 
     #[ORM\Column(type: 'boolean')]
-    private bool $watched = false;
+    private bool $Watched = false;
     
     
     public function getImdbID(): string
@@ -113,6 +117,28 @@ class Movie
     public function setType(string $Type): self
     {
         $this->Type = $Type;
+        return $this;
+    }
+
+    public function getRating(): float
+    {
+        return $this->Rating;
+    }
+
+    public function setRating(float $Rating): self
+    {
+        $this->Rating = $Rating;
+        return $this;
+    }
+
+    public function getWatched(): bool
+    {
+        return $this->Watched;
+    }
+
+    public function setWatched(bool $Watched): self
+    {
+        $this->Watched = $Watched;
         return $this;
     }
 

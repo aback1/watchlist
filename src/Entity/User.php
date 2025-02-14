@@ -11,7 +11,7 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ApiResource]
-#[ORM\Table(name: '`users`')]
+#[ORM\Table(name: '"users"')]
 #[UniqueEntity(fields: ["name"], message: "this username is already taken.")]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
